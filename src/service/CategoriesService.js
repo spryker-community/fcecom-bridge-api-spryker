@@ -1,4 +1,5 @@
 const httpClient = require("../utils/http-client");
+const logger = require("../utils/logger")
 
 const Lookup = require('./LookupUrlService');
 
@@ -142,19 +143,25 @@ const categoryTreeGet = async (parentId, lang = DEFAULT_LANG) => {
  */
 const categoriesCategoryIdsGet = async (categoryIds, lang = DEFAULT_LANG) => {
   const categories = await Promise.all(
-    categoryIds.map((categoryId) =>
-      httpClient.get('/category-nodes/' + categoryId, {
-        headers: {
-          'Accept-Language': lang,
-        },
-      })
-      .then(({data}) => data.data?.attributes)
-      .catch(() => {}) // TODO: fix this with proper error handling
-    )
-  ).then((promisedCategories) => promisedCategories.filter(Boolean).map(category => {
+    categoryIds.map(async (categoryId) => {
+      try {
+        const { data } = await httpClient.get('/category-nodes/' + categoryId, {
+          headers: {
+            'Accept-Language': lang,
+          },
+        });
+        return data.data?.attributes
+      }
+      catch (e) {
+       return null /* returning to make them filterable in the next step */
+      }
+    })
+  )
+
+  const filteredCategories = categories.filter(Boolean).map(category => {
     return {id: category.nodeId, label: category.name};
-  }));
-  return { categories };
+  });
+  return { categories: filteredCategories };
 }
 
 /**
@@ -175,7 +182,7 @@ const getCategoryUrl = async (categoryId, lang) => {
       url: data.data?.attributes?.url
     };
   }
-  console.error('Invalid categoryId passed', categoryId);
+  logger.logError('Invalid categoryId passed', categoryId);
   return null;
 }
 

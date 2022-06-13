@@ -1,3 +1,5 @@
+const logger = require('./logger')
+
 /**
  * This method extracts the URI information from a URL.
  *
@@ -12,7 +14,7 @@ const extractUri = (url) => {
     const { origin, href } = new URL(url);
     if (origin) return href.slice(href.indexOf(origin) + origin.length);
   } catch (error) {
-    console.warn('having problems converting URL to URI:', error);
+    logger.logWarning('having problems converting URL to URI:', error);
   }
 
   return url;

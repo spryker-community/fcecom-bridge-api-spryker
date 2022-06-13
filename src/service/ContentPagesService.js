@@ -60,25 +60,25 @@ const contentPagesGet = async (query, lang = DEFAULT_LANG, page = 1) => {
  * @return {[*]} The content pages for the given IDs.
  */
 const contentPagesContentIdsGet = async (contentIds, lang = DEFAULT_LANG) => {
-  const contentPages = (await Promise.all(contentIds.map((contentId) => {
-    const searchParams = new URLSearchParams(
-    );
-    return httpClient.get(`/cms-pages/${contentId}?${searchParams}`, {
-      headers: {
-        'Accept-Language': lang
-      }
-    }).then(({ data: promisedContentPage }) => {
-      if(promisedContentPage.errors) {
-        return;
-      }
-      const contentPageData = promisedContentPage.data;
-      return {
-        id: contentPageData.id,
-        label: contentPageData.attributes.name,
-        extract: contentPageData.attributes.url
-      }
-    })
-    .catch(() => {}) // TODO: fix this with proper error handling
+  const contentPages = (await Promise.all(contentIds.map(async (contentId) => {
+    try {
+      const { data: promisedContentPage } = await httpClient.get(`/cms-pages/${contentId}`, {
+        headers: {
+          'Accept-Language': lang
+        }
+      })
+
+      return promisedContentPage.errors ?
+        null
+        : {
+          id: promisedContentPage.data.id,
+          label: promisedContentPage.data.attributes.name,
+          extract: promisedContentPage.data.attributes.url
+        }
+    }
+    catch (e) {
+      return null; /* return null to make them filterable in the next step */
+    }
   })))
     .filter(Boolean);
 

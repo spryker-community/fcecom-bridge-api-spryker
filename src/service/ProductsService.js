@@ -64,18 +64,19 @@ const productsGet = async (categoryId, keyword, lang = DEFAULT_LANG, page = 1) =
  * @return Promise<{ hasNext: boolean, total: number, products: any[]}> The category data.
  */
 const productsProductIdsGet = async (productIds, lang = DEFAULT_LANG) => {
-  const products = (await Promise.all(productIds.map((productId) => {
-    const searchParams = new URLSearchParams({
-      include: 'abstract-product-image-sets'
-    })
-    return httpClient.get(`/abstract-products/${productId}?${searchParams}`, {
-      headers: {
-          'Accept-Language': lang
+  const products = (await Promise.all(productIds.map(async (productId) => {
+    try {
+      const searchParams = new URLSearchParams({
+        include: 'abstract-product-image-sets'
+      })
+      const { data: promisedProduct } = await httpClient.get(`/abstract-products/${productId}?${searchParams}`, {
+        headers: {
+            'Accept-Language': lang
+          }
         }
-      }
-    ).then(({ data: promisedProduct }) => {
+      )
       if (promisedProduct.errors) {
-        return;
+        return null; /* return null to make the products filterable in the next step */
       }
       const productData = promisedProduct.data;
       const imageData = promisedProduct.included
@@ -89,8 +90,10 @@ const productsProductIdsGet = async (productIds, lang = DEFAULT_LANG) => {
           thumbnail: imageData.attributes.imageSets[0].images[0].externalUrlSmall,
         };
       }
-    })
-    .catch(() => {}); // TODO: fix this with proper error handling
+    }
+    catch (e) {
+      return null; /* return null to make the products filterable in the next step */
+    }
   })))
     .filter(Boolean)
 
