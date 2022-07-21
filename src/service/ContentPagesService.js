@@ -4,7 +4,6 @@ const Lookup = require('./LookupUrlService');
 
 const { DEFAULT_LANG } = process.env;
 
-
 /**
  * This method returns all content pages.
  * Will also update the cache with the latest values.
@@ -15,41 +14,40 @@ const { DEFAULT_LANG } = process.env;
  * @return {any[]} An array containing all content pages.
  */
 const contentPagesGet = async (query, lang = DEFAULT_LANG, page = 1) => {
-  const pageSize = 20;
+    const pageSize = 20;
 
-  let requestUrl = `/cms-pages`
-  if (query) {
-    const searchParams = new URLSearchParams({
-      q: query
-    });
-    requestUrl += `?${searchParams}`;
-  }
-
-  const { data: fullRequestResponse = [] } = await httpClient.get(requestUrl, {
-    headers: {
-      'Accept-Language': lang
+    let requestUrl = `/cms-pages`;
+    if (query) {
+        const searchParams = new URLSearchParams({
+            q: query
+        });
+        requestUrl += `?${searchParams}`;
     }
-  });
-  fullRequestResponse.data.forEach((contentPage) => {
-    Lookup.addToCache(contentPage.attributes.url, {
-      type: 'content',
-      id: contentPage.id,
-      lang: lang
-    });
-  });
-  const contentPages = fullRequestResponse.data.slice((page - 1) * pageSize, page * pageSize).map((contentPage) => {
-    return {
-      id: contentPage.id,
-      label: contentPage.attributes.name,
-      extract: contentPage.attributes.url
-    }
-  });
-  const total = fullRequestResponse.data.length;
-  const hasNext = page && total > page * pageSize;
 
-  return { contentPages, hasNext, total };
+    const { data: fullRequestResponse = [] } = await httpClient.get(requestUrl, {
+        headers: {
+            'Accept-Language': lang
+        }
+    });
+    fullRequestResponse.data.forEach((contentPage) => {
+        Lookup.addToCache(contentPage.attributes.url, {
+            type: 'content',
+            id: contentPage.id,
+            lang: lang
+        });
+    });
+    const contentPages = fullRequestResponse.data.slice((page - 1) * pageSize, page * pageSize).map((contentPage) => {
+        return {
+            id: contentPage.id,
+            label: contentPage.attributes.name,
+            extract: contentPage.attributes.url
+        };
+    });
+    const total = fullRequestResponse.data.length;
+    const hasNext = page && total > page * pageSize;
+
+    return { contentPages, hasNext, total };
 };
-
 
 /**
  * This method returns the content pages with the given IDs.
@@ -60,29 +58,31 @@ const contentPagesGet = async (query, lang = DEFAULT_LANG, page = 1) => {
  * @return {[*]} The content pages for the given IDs.
  */
 const contentPagesContentIdsGet = async (contentIds, lang = DEFAULT_LANG) => {
-  const contentPages = (await Promise.all(contentIds.map(async (contentId) => {
-    try {
-      const { data: promisedContentPage } = await httpClient.get(`/cms-pages/${contentId}`, {
-        headers: {
-          'Accept-Language': lang
-        }
-      })
+    const contentPages = (
+        await Promise.all(
+            contentIds.map(async (contentId) => {
+                try {
+                    const { data: promisedContentPage } = await httpClient.get(`/cms-pages/${contentId}`, {
+                        headers: {
+                            'Accept-Language': lang
+                        }
+                    });
 
-      return promisedContentPage.errors ?
-        null
-        : {
-          id: promisedContentPage.data.id,
-          label: promisedContentPage.data.attributes.name,
-          extract: promisedContentPage.data.attributes.url
-        }
-    }
-    catch (e) {
-      return null; /* return null to make them filterable in the next step */
-    }
-  })))
-    .filter(Boolean);
+                    return promisedContentPage.errors
+                        ? null
+                        : {
+                              id: promisedContentPage.data.id,
+                              label: promisedContentPage.data.attributes.name,
+                              extract: promisedContentPage.data.attributes.url
+                          };
+                } catch (e) {
+                    return null; /* return null to make them filterable in the next step */
+                }
+            })
+        )
+    ).filter(Boolean);
 
-  return { contentPages };
+    return { contentPages };
 };
 
 /**
@@ -93,23 +93,22 @@ const contentPagesContentIdsGet = async (contentIds, lang = DEFAULT_LANG) => {
  * @return {{url: string}} The URL belonging to the page, null if page ID was invalid.
  */
 const getContentUrl = async (contentId, lang = DEFAULT_LANG) => {
-  const searchParams = new URLSearchParams(
-  );
-  const { data } = await httpClient.get(`/cms-pages/${contentId}?${searchParams}`, {
-    headers: {
-      'Accept-Language': lang
+    const searchParams = new URLSearchParams();
+    const { data } = await httpClient.get(`/cms-pages/${contentId}?${searchParams}`, {
+        headers: {
+            'Accept-Language': lang
+        }
+    });
+    if (data.errors) {
+        return;
     }
-  });
-  if(data.errors) {
-    return;
-  }
-  return {
-    url: data.data.attributes.url
-  }
+    return {
+        url: data.data.attributes.url
+    };
 };
 
 module.exports = {
-  contentPagesGet,
-  contentPagesContentIdsGet,
-  getContentUrl,
+    contentPagesGet,
+    contentPagesContentIdsGet,
+    getContentUrl
 };

@@ -1,5 +1,5 @@
 const httpClient = require('../utils/http-client');
-const { extractUri } = require("../utils/url")
+const { extractUri } = require('../utils/url');
 
 // Map to cache content IDs in order to resolve their URLs later.
 const urlCache = new Map();
@@ -11,8 +11,8 @@ const urlCache = new Map();
  * @param {{id?: string, type?: string}} metadata The Value to be associated with the url.
  */
 const addToCache = (url, metadata) => {
-  urlCache.set(extractUri(url), metadata);
-}
+    urlCache.set(extractUri(url), metadata);
+};
 
 /**
  * This method checks if a url already has a value associated with it.
@@ -21,8 +21,8 @@ const addToCache = (url, metadata) => {
  * @return {boolean} If the url has a value associated to it.
  */
 const cacheHasUrl = (url) => {
-  return urlCache.has(extractUri(url));
-}
+    return urlCache.has(extractUri(url));
+};
 
 /**
  * This method returns the identifier for the given storefront URL.
@@ -31,11 +31,11 @@ const cacheHasUrl = (url) => {
  * @return {{id?: string, type?: string}} The identifier belonging to the given URL.
  */
 const lookup = (url) => {
-  return urlCache.get(extractUri(url));
+    return urlCache.get(extractUri(url));
 };
 
 module.exports = {
-  lookup,
-  addToCache,
-  cacheHasUrl,
+    lookup,
+    addToCache,
+    cacheHasUrl
 };

@@ -1,5 +1,5 @@
-const httpClient = require("../utils/http-client");
-const logger = require("../utils/logger")
+const httpClient = require('../utils/http-client');
+const logger = require('../utils/logger');
 
 const Lookup = require('./LookupUrlService');
 
@@ -11,17 +11,17 @@ const { DEFAULT_LANG } = process.env;
  * @param {string} lang The lang of the URLs.
  */
 const buildCache = (categoryTree, lang) => {
-  categoryTree.forEach(category => {
-    Lookup.addToCache(category.url, {
-      type: 'category',
-      id: category.nodeId,
-      lang
+    categoryTree.forEach((category) => {
+        Lookup.addToCache(category.url, {
+            type: 'category',
+            id: category.nodeId,
+            lang
+        });
+        if (categoryTree.children?.length) {
+            buildCache(categoryTree.children, lang);
+        }
     });
-    if (categoryTree.children?.length) {
-      buildCache(categoryTree.children, lang)
-    }
-  })
-}
+};
 
 /**
  * This method fetches all categories.
@@ -31,25 +31,24 @@ const buildCache = (categoryTree, lang) => {
  * @return {any[]} List of all categories.
  */
 const getRelevantCategories = async (parentId, lang) => {
-  if (parentId) {
-    const { data: category = [] } = await httpClient.get('/category-nodes/' + parentId,  {
-      headers: {
-      'Accept-Language': lang
-      }
-    });
-    return category.data.attributes?.children;
-  }
-  else {
-    const { data: categories = [] } = await httpClient.get('/category-trees',  {
-      headers: {
-        'Accept-Language': lang
-      }
-    });
-    const categoryTrees = categories.data.find((t) => t.type === 'category-trees');
-    buildCache(categoryTrees.attributes?.categoryNodesStorage, lang);
-    return  categoryTrees.attributes?.categoryNodesStorage;
-  }
-}
+    if (parentId) {
+        const { data: category = [] } = await httpClient.get('/category-nodes/' + parentId, {
+            headers: {
+                'Accept-Language': lang
+            }
+        });
+        return category.data.attributes?.children;
+    } else {
+        const { data: categories = [] } = await httpClient.get('/category-trees', {
+            headers: {
+                'Accept-Language': lang
+            }
+        });
+        const categoryTrees = categories.data.find((t) => t.type === 'category-trees');
+        buildCache(categoryTrees.attributes?.categoryNodesStorage, lang);
+        return categoryTrees.attributes?.categoryNodesStorage;
+    }
+};
 
 /**
  * This method recursively creates a nested tree structure for the given categories.
@@ -57,11 +56,10 @@ const getRelevantCategories = async (parentId, lang) => {
  * @param {any[]} categoriesTree The arrays of categories to work with.
  */
 const buildCategoryTree = (categoriesTree) => {
-  return categoriesTree.map((element) => {
-    return unfoldCategoryTree(element);
-  });
-}
-
+    return categoriesTree.map((element) => {
+        return unfoldCategoryTree(element);
+    });
+};
 
 /**
  * This method maps the retrieved category object from Spryker to the expected category object from FirstSpirit.
@@ -70,12 +68,12 @@ const buildCategoryTree = (categoriesTree) => {
  * @return {{children: (any[]), id, label}} The category object with the strcuture FirstSpirit expects.
  */
 const unfoldCategoryTree = (categoryObj) => {
-  const kids = categoryObj.children ? categoryObj.children.map((element) => unfoldCategoryTree(element)) : [];
-  return {
-    id: categoryObj.nodeId,
-    label: categoryObj.name,
-    children: kids,
-  };
+    const kids = categoryObj.children ? categoryObj.children.map((element) => unfoldCategoryTree(element)) : [];
+    return {
+        id: categoryObj.nodeId,
+        label: categoryObj.name,
+        children: kids
+    };
 };
 
 /**
@@ -85,12 +83,12 @@ const unfoldCategoryTree = (categoryObj) => {
  * @return {any[]} The categories as a flat list.
  */
 const buildCategoryList = (categories) => {
-  let resultList = []
-  for (const category of categories) {
-    resultList.push({id: category.nodeId, label: category.name});
-    if (category.children && category.children.length) resultList.push(...buildCategoryList(category.children));
-  }
-  return resultList;
+    let resultList = [];
+    for (const category of categories) {
+        resultList.push({ id: category.nodeId, label: category.name });
+        if (category.children && category.children.length) resultList.push(...buildCategoryList(category.children));
+    }
+    return resultList;
 };
 
 /**
@@ -102,19 +100,19 @@ const buildCategoryList = (categories) => {
  * @param {number} [page=1] Number of the page to retrieve.
  * @return Promise<{ hasNext: boolean, total: number, categories: any[]}> The category list.
  */
-const categoriesGet = async (parentId, lang= DEFAULT_LANG, page = 1) => {
-  const pageSize = 20;
-  const relevantCategories = await getRelevantCategories(parentId, lang);
-  if (relevantCategories) {
-    const fullCategoriesList = buildCategoryList(relevantCategories);
-    const categories = fullCategoriesList.slice((page - 1) * pageSize, page * pageSize);
-    const total = fullCategoriesList.length;
-    const hasNext = page && total > page * pageSize;
-    return { categories, total, hasNext };
-  } else {
-    return { categories: [] };
-  }
-}
+const categoriesGet = async (parentId, lang = DEFAULT_LANG, page = 1) => {
+    const pageSize = 20;
+    const relevantCategories = await getRelevantCategories(parentId, lang);
+    if (relevantCategories) {
+        const fullCategoriesList = buildCategoryList(relevantCategories);
+        const categories = fullCategoriesList.slice((page - 1) * pageSize, page * pageSize);
+        const total = fullCategoriesList.length;
+        const hasNext = page && total > page * pageSize;
+        return { categories, total, hasNext };
+    } else {
+        return { categories: [] };
+    }
+};
 
 /**
  * This method fetches all categories and returns them as a nested structure.
@@ -125,13 +123,13 @@ const categoriesGet = async (parentId, lang= DEFAULT_LANG, page = 1) => {
  * @return Promise<{ hasNext: boolean, total: number, categories: any[]}> The category tree.
  */
 const categoryTreeGet = async (parentId, lang = DEFAULT_LANG) => {
-  const relevantCategories = await getRelevantCategories(parentId, lang);
-  if (relevantCategories) {
-    return { categorytree: buildCategoryTree(relevantCategories) };
-  } else {
-    return { categorytree: [] };
-  }
-}
+    const relevantCategories = await getRelevantCategories(parentId, lang);
+    if (relevantCategories) {
+        return { categorytree: buildCategoryTree(relevantCategories) };
+    } else {
+        return { categorytree: [] };
+    }
+};
 
 /**
  * This method fetches the data for the categories with the given IDs.
@@ -142,27 +140,26 @@ const categoryTreeGet = async (parentId, lang = DEFAULT_LANG) => {
  * @return Promise<{ hasNext: boolean, total: number, categories: any[]}> The category data.
  */
 const categoriesCategoryIdsGet = async (categoryIds, lang = DEFAULT_LANG) => {
-  const categories = await Promise.all(
-    categoryIds.map(async (categoryId) => {
-      try {
-        const { data } = await httpClient.get('/category-nodes/' + categoryId, {
-          headers: {
-            'Accept-Language': lang,
-          },
-        });
-        return data.data?.attributes
-      }
-      catch (e) {
-       return null /* returning to make them filterable in the next step */
-      }
-    })
-  )
+    const categories = await Promise.all(
+        categoryIds.map(async (categoryId) => {
+            try {
+                const { data } = await httpClient.get('/category-nodes/' + categoryId, {
+                    headers: {
+                        'Accept-Language': lang
+                    }
+                });
+                return data.data?.attributes;
+            } catch (e) {
+                return null; /* returning to make them filterable in the next step */
+            }
+        })
+    );
 
-  const filteredCategories = categories.filter(Boolean).map(category => {
-    return {id: category.nodeId, label: category.name};
-  });
-  return { categories: filteredCategories };
-}
+    const filteredCategories = categories.filter(Boolean).map((category) => {
+        return { id: category.nodeId, label: category.name };
+    });
+    return { categories: filteredCategories };
+};
 
 /**
  * This method returns the URL for the category with the given ID.
@@ -172,23 +169,23 @@ const categoriesCategoryIdsGet = async (categoryIds, lang = DEFAULT_LANG) => {
  * @return {{url: string}} The URL of the category, null if given ID is invalid.
  */
 const getCategoryUrl = async (categoryId, lang) => {
-  const { data = [] } = await httpClient.get('/category-nodes/' + categoryId,  {
-    headers: {
-      'Accept-Language': lang
+    const { data = [] } = await httpClient.get('/category-nodes/' + categoryId, {
+        headers: {
+            'Accept-Language': lang
+        }
+    });
+    if (data.data?.attributes?.url) {
+        return {
+            url: data.data?.attributes?.url
+        };
     }
-  });
-  if (data.data?.attributes?.url) {
-    return {
-      url: data.data?.attributes?.url
-    };
-  }
-  logger.logError('Invalid categoryId passed', categoryId);
-  return null;
-}
+    logger.logError('Invalid categoryId passed', categoryId);
+    return null;
+};
 
 module.exports = {
-  categoriesGet,
-  categoriesCategoryIdsGet,
-  categoryTreeGet,
-  getCategoryUrl
+    categoriesGet,
+    categoriesCategoryIdsGet,
+    categoryTreeGet,
+    getCategoryUrl
 };

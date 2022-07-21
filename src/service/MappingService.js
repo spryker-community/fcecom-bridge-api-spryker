@@ -12,14 +12,10 @@ const { DEFAULT_LANG } = process.env;
  * @returns {object} The identifier for the given URL.
  */
 const lookupUrlGet = async function (url) {
-  if (!LookupUrlService.cacheHasUrl(url)) {
-    await Promise.all([
-      ContentPages.contentPagesGet(),
-      Products.productsGet(),
-      Categories.categoriesGet()
-    ])
-  }
-  return LookupUrlService.lookup(url);
+    if (!LookupUrlService.cacheHasUrl(url)) {
+        await Promise.all([ContentPages.contentPagesGet(), Products.productsGet(), Categories.categoriesGet()]);
+    }
+    return LookupUrlService.lookup(url);
 };
 
 /**
@@ -31,18 +27,18 @@ const lookupUrlGet = async function (url) {
  * @returns The Storefront URL belonging to the given element.
  */
 const storefrontUrlGet = async function (type, id, lang = DEFAULT_LANG) {
-  switch (type) {
-    case 'product':
-      return Products.getProductUrl(id, lang);
-    case 'category':
-      return Categories.getCategoryUrl(id, lang);
-    case 'content':
-    default:
-      return ContentPages.getContentUrl(id, lang);
-  }
+    switch (type) {
+        case 'product':
+            return Products.getProductUrl(id, lang);
+        case 'category':
+            return Categories.getCategoryUrl(id, lang);
+        case 'content':
+        default:
+            return ContentPages.getContentUrl(id, lang);
+    }
 };
 
 module.exports = {
-  lookupUrlGet,
-  storefrontUrlGet
+    lookupUrlGet,
+    storefrontUrlGet
 };
