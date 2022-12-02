@@ -8,25 +8,29 @@ describe('ContentPagesService', () => {
     describe('getContentUrl', () => {
         it('returns the correct URL', async () => {
             const contentId = data.fetchContentsById.data.id;
-            httpClient.get.mockResolvedValue({ data: data.fetchContentsById });
+            httpClient.get.mockResolvedValue({ data: data.fetchContentsById, status: 200 });
 
             const result = await service.getContentUrl(contentId);
 
             expect(result).toEqual({ url: data.fetchContentsById.data.attributes.url });
         });
-        it('returns null for invalid IDs', async () => {
-            const contentId = -999;
-            httpClient.get.mockResolvedValue({ data: data.fetchContentsByIdError });
+        it('throws an error when http call fails', async () => {
+            const errorResponseStatus = 404
+            const errorResponse = { data: data.fetchContentsByIdError, status: errorResponseStatus }
+            httpClient.get.mockResolvedValue(errorResponse);
 
-            const result = await service.getContentUrl(contentId);
-
-            expect(result).toBeUndefined();
+            try {
+                service.getContentUrl(123);
+            }
+            catch (error) {
+                expect(errorResponse).toEqual(error)
+            }
         });
     });
     describe('contentPagesContentIdsGet', () => {
         it('returns the content pages with the given IDs', async () => {
             const contentIds = [data.fetchContentsById.data.id, -999];
-            httpClient.get.mockResolvedValueOnce({ data: data.fetchContentsById }).mockResolvedValue({ data: data.fetchContentsByIdError });
+            httpClient.get.mockResolvedValueOnce({ data: data.fetchContentsById, status: 200 }).mockResolvedValue({ data: data.fetchContentsByIdError, status: 200 });
 
             const result = await service.contentPagesContentIdsGet(contentIds);
 
@@ -36,7 +40,7 @@ describe('ContentPagesService', () => {
     });
     describe('contentPagesGet', () => {
         it('returns all content pages', async () => {
-            httpClient.get.mockResolvedValue({ data: data.fetchContents });
+            httpClient.get.mockResolvedValue({ data: data.fetchContents, status: 200 });
 
             const result = await service.contentPagesGet();
 

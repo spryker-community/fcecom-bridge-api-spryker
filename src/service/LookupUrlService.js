@@ -1,4 +1,3 @@
-const httpClient = require('../utils/http-client');
 const { extractUri } = require('../utils/url');
 
 // Map to cache content IDs in order to resolve their URLs later.

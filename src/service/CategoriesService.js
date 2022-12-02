@@ -32,7 +32,7 @@ const buildCache = (categoryTree, lang) => {
  */
 const getRelevantCategories = async (parentId, lang) => {
     if (parentId) {
-        const { data: category = [] } = await httpClient.get('/category-nodes/' + parentId, {
+        const { data: category = {} } = await httpClient.get('/category-nodes/' + parentId, {
             headers: {
                 'Accept-Language': lang
             }

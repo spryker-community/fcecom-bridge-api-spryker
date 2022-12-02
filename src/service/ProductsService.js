@@ -25,7 +25,7 @@ const productsGet = async (categoryId, keyword, lang = DEFAULT_LANG, page = 1) =
         ...{ include: 'abstract-products' }
     });
 
-    const { data: fullRequestResponse = [], headers = [] } = await httpClient.get(`/catalog-search?${searchParams}`, {
+    const { data: fullRequestResponse = [] } = await httpClient.get(`/catalog-search?${searchParams}`, {
         headers: {
             'Accept-Language': lang
         }
@@ -102,7 +102,7 @@ const productsProductIdsGet = async (productIds, lang = DEFAULT_LANG) => {
 /**
  * This method returns the URL for the given product.
  *
- * @param {number} productId The ID of the product to get the URL for.
+ * @param {number|string} productId The ID of the product to get the URL for.
  * @param {string} [lang=DEFAULT_LANG] The ISO shorthand of the language for the request (i.E 'en').
  * @return {{url: string}} The URL of the given product, null if given ID is invalid.
  */
@@ -112,7 +112,6 @@ const getProductUrl = async (productId, lang = DEFAULT_LANG) => {
             'Accept-Language': lang
         }
     });
-
     return {
         url: data.data.attributes.url
     };

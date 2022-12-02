@@ -8,7 +8,7 @@ describe('CategoriesService', () => {
     describe('getCategoryUrl', () => {
         it('returns the URL of the given category', async () => {
             const testCategory = data.categoriesGetParentId.data;
-            httpClient.get.mockResolvedValue({ data: data.categoriesGetParentId });
+            httpClient.get.mockResolvedValue({ data: data.categoriesGetParentId, status: 200 });
 
             const result = await service.getCategoryUrl(testCategory.attributes.nodeId);
 
@@ -17,17 +17,30 @@ describe('CategoriesService', () => {
         });
         it('returns null if the given category is invalid', async () => {
             console.error = jest.fn();
-            httpClient.get.mockResolvedValue({ data: data.categoriesGetParentIdError });
+            httpClient.get.mockResolvedValue({ data: data.categoriesGetParentIdError, status: 200 });
 
             const result = await service.getCategoryUrl(-999);
 
             expect(result).toEqual(null);
             expect(console.error).toHaveBeenCalled();
         });
+        it('throws an error when http call fails', async () => {
+            const errorResponseText = "error"
+            const errorResponseStatus = 404
+            const errorResponse = { data: errorResponseText, status: errorResponseStatus }
+            httpClient.get.mockResolvedValue(errorResponse);
+
+            try {
+                await service.getCategoryUrl(123);
+            }
+            catch (error) {
+                expect(errorResponse).toEqual(error)
+            }
+        });
     });
     describe('categoriesGet', () => {
         it('returns the categories as list (no parent ID, no pagination)', async () => {
-            httpClient.get.mockResolvedValue({ data: data.categoriesGet });
+            httpClient.get.mockResolvedValue({ data: data.categoriesGet, status: 200 });
 
             const result = await service.categoriesGet();
 
@@ -42,7 +55,7 @@ describe('CategoriesService', () => {
         });
         it('returns the categories as list (with parent ID)', async () => {
             const testCategory = data.categoriesGet.data[0].attributes.categoryNodesStorage[0];
-            httpClient.get.mockResolvedValue({ data: data.categoriesGetParentId });
+            httpClient.get.mockResolvedValue({ data: data.categoriesGetParentId, status: 200 });
 
             const result = await service.categoriesGet(testCategory.nodeId);
 
@@ -53,7 +66,7 @@ describe('CategoriesService', () => {
             expect(result.categories[2].id).toEqual(8);
         });
         it('returns the categories as list (with pagination)', async () => {
-            httpClient.get.mockResolvedValue({ data: data.categoriesGet });
+            httpClient.get.mockResolvedValue({ data: data.categoriesGet, status: 200 });
 
             const result = await service.categoriesGet(undefined, 'EN', 123);
 
@@ -65,7 +78,7 @@ describe('CategoriesService', () => {
     });
     describe('categoryTreeGet', () => {
         it('returns the categories as tree (no parent ID)', async () => {
-            httpClient.get.mockResolvedValue({ data: data.categoriesGet });
+            httpClient.get.mockResolvedValue({ data: data.categoriesGet, status: 200 });
 
             const result = await service.categoryTreeGet();
 
@@ -78,7 +91,7 @@ describe('CategoriesService', () => {
         });
         it('returns the categories as tree (with parent ID)', async () => {
             const testCategory = data.categoriesGet.data[0].attributes.categoryNodesStorage[0];
-            httpClient.get.mockResolvedValue({ data: data.categoriesGetParentId });
+            httpClient.get.mockResolvedValue({ data: data.categoriesGetParentId, status: 200 });
 
             const result = await service.categoryTreeGet(testCategory.nodeId);
 

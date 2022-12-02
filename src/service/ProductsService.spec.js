@@ -15,7 +15,7 @@ describe('ProductsService', () => {
             const expectedProductList = data.fetchProducts.data[0].attributes.abstractProducts;
             const expectedAbstractProductList = data.fetchProducts.included;
 
-            httpClient.get.mockResolvedValue({ data: data.fetchProducts });
+            httpClient.get.mockResolvedValue({ data: data.fetchProducts, status: 200 });
 
             const result = await service.productsGet(categoryId, keyword, lang, page);
 
@@ -33,6 +33,19 @@ describe('ProductsService', () => {
             expect(result.hasNext).toEqual(
                 data.fetchProducts.data[0].attributes.pagination.currentPage < data.fetchProducts.data[0].attributes.pagination.maxPage
             );
+        });
+        it('throws an error when http call fails', async () => {
+            const errorResponseText = "error"
+            const errorResponseStatus = 404
+            const errorResponse = { data: errorResponseText, status: errorResponseStatus }
+            httpClient.get.mockResolvedValue(errorResponse);
+
+            try {
+                service.getProductUrl(123);
+            }
+            catch (error) {
+                expect(errorResponse).toEqual(error)
+            }
         });
     });
     describe('productsProductIdsGet', () => {
@@ -61,7 +74,7 @@ describe('ProductsService', () => {
     describe('getProductUrl', () => {
         it('returns the correct URL', async () => {
             const testProduct = data.fetchProductsWithId.data;
-            httpClient.get.mockResolvedValue({ data: data.fetchProductsWithId });
+            httpClient.get.mockResolvedValue({ data: data.fetchProductsWithId, status: 200 });
 
             const result = await service.getProductUrl(testProduct.id);
 
