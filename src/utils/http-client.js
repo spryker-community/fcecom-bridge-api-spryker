@@ -2,13 +2,19 @@ const axios = require('axios');
 const logger = require('./logger');
 
 const { SPRYKER_GLUE_LOCATION } = process.env;
+
+const LOGGING_NAME = 'http-client';
+
 const client = axios.create({ baseURL: SPRYKER_GLUE_LOCATION });
 
 let lastError;
 
 client.interceptors.response.use(
     (response) => {
-        logger.logInfo(` ↳ ${response.config.method.toUpperCase()} ${response.config.url} - ${response.status} ${response.statusText}`);
+        logger.logInfo(
+            LOGGING_NAME,
+            `↳ Received response ${response.config.method.toUpperCase()} ${response.config.url} - ${response.status} ${response.statusText}`
+        );
         return response;
     },
     (error) => {
@@ -18,12 +24,13 @@ client.interceptors.response.use(
         const status = response?.status || 500;
         if (response) {
             logger.logError(
-                ` ↳ ${response.config.method.toUpperCase()} ${response.config.url} - ${response.status} ${
+                LOGGING_NAME,
+                `↳  Received response ${response.config.method.toUpperCase()} ${response.config.url} - ${response.status} ${
                     response.statusText
-                }\n\t${details}`
+                } ${details}`
             );
         } else {
-            logger.logError(` ↳ ${message}`);
+            logger.logError(LOGGING_NAME, `↳ ${message}`);
         }
         return Promise.reject({ error: true, data, status });
     }

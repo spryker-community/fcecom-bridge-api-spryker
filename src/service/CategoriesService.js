@@ -3,6 +3,8 @@ const logger = require('../utils/logger');
 
 const Lookup = require('./LookupUrlService');
 
+const LOGGING_NAME = 'CategoriesService';
+
 const { DEFAULT_LANG } = process.env;
 
 /**
@@ -31,18 +33,24 @@ const buildCache = (categoryTree, lang) => {
  * @return {any[]} List of all categories.
  */
 const getRelevantCategories = async (parentId, lang) => {
+    const langHeader = {
+        'Accept-Language': lang
+    };
     if (parentId) {
+        logger.logDebug(
+            LOGGING_NAME,
+            `Performing GET request to /category-nodes/${parentId} with lang header ${JSON.stringify(langHeader)}`
+        );
+
         const { data: category = {} } = await httpClient.get('/category-nodes/' + parentId, {
-            headers: {
-                'Accept-Language': lang
-            }
+            headers: langHeader
         });
         return category.data.attributes?.children;
     } else {
+        logger.logDebug(LOGGING_NAME, `Performing GET request to /category-trees with lang header ${JSON.stringify(langHeader)}`);
+
         const { data: categories = [] } = await httpClient.get('/category-trees', {
-            headers: {
-                'Accept-Language': lang
-            }
+            headers: langHeader
         });
         const categoryTrees = categories.data.find((t) => t.type === 'category-trees');
         buildCache(categoryTrees.attributes?.categoryNodesStorage, lang);
@@ -143,10 +151,17 @@ const categoriesCategoryIdsGet = async (categoryIds, lang = DEFAULT_LANG) => {
     const categories = await Promise.all(
         categoryIds.map(async (categoryId) => {
             try {
+                const langHeader = {
+                    'Accept-Language': lang
+                };
+
+                logger.logDebug(
+                    LOGGING_NAME,
+                    `Performing GET request to /category-nodes/${categoryId} with lang header ${JSON.stringify(langHeader)}`
+                );
+
                 const { data } = await httpClient.get('/category-nodes/' + categoryId, {
-                    headers: {
-                        'Accept-Language': lang
-                    }
+                    headers: langHeader
                 });
                 return data.data?.attributes;
             } catch (e) {
@@ -169,17 +184,21 @@ const categoriesCategoryIdsGet = async (categoryIds, lang = DEFAULT_LANG) => {
  * @return {{url: string}} The URL of the category, null if given ID is invalid.
  */
 const getCategoryUrl = async (categoryId, lang) => {
+    const langHeader = {
+        'Accept-Language': lang
+    };
+
+    logger.logDebug(LOGGING_NAME, `Performing GET request to /category-nodes/${categoryId} with lang header ${JSON.stringify(langHeader)}`);
+
     const { data = [] } = await httpClient.get('/category-nodes/' + categoryId, {
-        headers: {
-            'Accept-Language': lang
-        }
+        headers: langHeader
     });
     if (data.data?.attributes?.url) {
         return {
             url: data.data?.attributes?.url
         };
     }
-    logger.logError('Invalid categoryId passed', categoryId);
+    logger.logError(LOGGING_NAME, 'Invalid categoryId passed', categoryId);
     return null;
 };
 

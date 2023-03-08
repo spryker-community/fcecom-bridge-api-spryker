@@ -1,6 +1,8 @@
 const httpClient = require('../utils/http-client');
-
 const Lookup = require('./LookupUrlService');
+const logger = require('../utils/logger');
+
+const LOGGING_NAME = 'ProductsService';
 
 const { DEFAULT_LANG } = process.env;
 
@@ -25,10 +27,17 @@ const productsGet = async (categoryId, keyword, lang = DEFAULT_LANG, page = 1) =
         ...{ include: 'abstract-products' }
     });
 
+    const langHeader = {
+        'Accept-Language': lang
+    };
+
+    logger.logDebug(
+        LOGGING_NAME,
+        `Performing GET request to /catalog-search with parameters ${searchParams} and lang header ${JSON.stringify(langHeader)}`
+    );
+
     const { data: fullRequestResponse = [] } = await httpClient.get(`/catalog-search?${searchParams}`, {
-        headers: {
-            'Accept-Language': lang
-        }
+        headers: langHeader
     });
     const productData = fullRequestResponse.data.find((t) => t.type === 'catalog-search');
     const totalElementFound = productData.attributes.pagination.numFound;
@@ -70,10 +79,20 @@ const productsProductIdsGet = async (productIds, lang = DEFAULT_LANG) => {
                     const searchParams = new URLSearchParams({
                         include: 'abstract-product-image-sets'
                     });
+
+                    const langHeader = {
+                        'Accept-Language': lang
+                    };
+
+                    logger.logDebug(
+                        LOGGING_NAME,
+                        `Performing GET request to /abstract-products/${productId} with parameters ${searchParams} and lang header ${JSON.stringify(
+                            langHeader
+                        )}`
+                    );
+
                     const { data: promisedProduct } = await httpClient.get(`/abstract-products/${productId}?${searchParams}`, {
-                        headers: {
-                            'Accept-Language': lang
-                        }
+                        headers: langHeader
                     });
                     if (promisedProduct.errors) {
                         return null; /* return null to make the products filterable in the next step */
@@ -107,10 +126,16 @@ const productsProductIdsGet = async (productIds, lang = DEFAULT_LANG) => {
  * @return {{url: string}} The URL of the given product, null if given ID is invalid.
  */
 const getProductUrl = async (productId, lang = DEFAULT_LANG) => {
+    const langHeader = {
+        'Accept-Language': lang
+    };
+    logger.logDebug(
+        LOGGING_NAME,
+        `Performing GET request to /abstract-products/${productId} with lang header ${JSON.stringify(langHeader)}`
+    );
+
     const { data = [] } = await httpClient.get(`/abstract-products/${productId}`, {
-        headers: {
-            'Accept-Language': lang
-        }
+        headers: langHeader
     });
     return {
         url: data.data.attributes.url
