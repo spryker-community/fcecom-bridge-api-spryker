@@ -1,6 +1,7 @@
 const httpClient = require('../utils/http-client');
 const Lookup = require('./LookupUrlService');
 const logger = require('../utils/logger');
+const { ShopError } = require('fcecom-bridge-commons');
 
 const LOGGING_NAME = 'ProductsService';
 
@@ -137,8 +138,13 @@ const getProductUrl = async (productId, lang = DEFAULT_LANG) => {
     const { data = [] } = await httpClient.get(`/abstract-products/${productId}`, {
         headers: langHeader
     });
+    const url = data?.data?.attributes?.url;
+    if (!url) {
+        logger.logError(LOGGING_NAME, `Failed to retrieve URL for product ${productId}, received ${data}`);
+        throw new ShopError('Unable to retrieve URL from shop.');
+    }
     return {
-        url: data.data.attributes.url
+        url
     };
 };
 

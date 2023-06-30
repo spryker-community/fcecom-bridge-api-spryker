@@ -1,6 +1,7 @@
 const httpClient = require('../utils/http-client');
 const data = require('./ProductsService.spec.data');
 const service = require('./ProductsService');
+const { ShopError } = require('fcecom-bridge-commons');
 
 jest.mock('../../src/utils/http-client');
 
@@ -33,19 +34,6 @@ describe('ProductsService', () => {
             expect(result.hasNext).toEqual(
                 data.fetchProducts.data[0].attributes.pagination.currentPage < data.fetchProducts.data[0].attributes.pagination.maxPage
             );
-        });
-        it('throws an error when http call fails', async () => {
-            const errorResponseText = "error"
-            const errorResponseStatus = 404
-            const errorResponse = { data: errorResponseText, status: errorResponseStatus }
-            httpClient.get.mockResolvedValue(errorResponse);
-
-            try {
-                service.getProductUrl(123);
-            }
-            catch (error) {
-                expect(errorResponse).toEqual(error)
-            }
         });
     });
     describe('productsProductIdsGet', () => {
@@ -80,6 +68,15 @@ describe('ProductsService', () => {
 
             expect(httpClient.get.mock.calls[0][0]).toEqual(`/abstract-products/${testProduct.id}`);
             expect(result).toEqual({ url: testProduct.attributes.url });
+        });
+        it('throws an error when http call fails', async () => {
+            const errorResponseText = 'error';
+            const errorResponseStatus = 404;
+            const errorResponse = { data: errorResponseText, status: errorResponseStatus };
+            httpClient.get.mockResolvedValue(errorResponse);
+
+            expect(async () => await service.getProductUrl(123)).rejects.toThrow(ShopError);
+            expect(async () => await service.getProductUrl(123)).rejects.toThrowError('Unable to retrieve URL from shop.');
         });
     });
 });

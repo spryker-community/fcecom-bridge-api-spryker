@@ -19,7 +19,7 @@ Lean more about their API [here](https://docs.spryker.com/docs/scos/dev/glue-api
 
 
 ## Prerequisites
-- Server running node 14 or later
+- Server running node 18 or later
 - Spryker Commerce OS instance
 - Access to the [Glue API](https://docs.spryker.com/docs/scos/dev/glue-api-guides/202108.0/glue-rest-api.html)
 
