@@ -1,4 +1,4 @@
-const ContentPages = require('./ContentPagesService');
+const ContentPages = require('./ContentService');
 const Categories = require('./CategoriesService');
 const Products = require('./ProductsService');
 const LookupUrlService = require('./LookupUrlService');
@@ -13,7 +13,7 @@ const { DEFAULT_LANG } = process.env;
  */
 const lookupUrlGet = async function (url) {
     if (!LookupUrlService.cacheHasUrl(url)) {
-        await Promise.all([ContentPages.contentPagesGet(), Products.productsGet(), Categories.categoriesGet()]);
+        await Promise.all([ContentPages.contentGet(), Products.productsGet(), Categories.categoriesGet()]);
     }
     return LookupUrlService.lookup(url);
 };
