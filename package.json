@@ -1,7 +1,7 @@
 {
   "name": "fcecom-bridge-api-spryker",
   "description": "FirstSpirit Connect for E-Commerce - Spryker Bridge",
-  "version": "2.2.0",
+  "version": "2.5.0",
   "private": true,
   "repository": {
     "type": "git",
@@ -16,14 +16,14 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "axios": "^1.5.1",
-    "dotenv": "^16.3.1",
-    "fcecom-bridge-commons": "^2.1.0"
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5",
+    "fcecom-bridge-commons": "^2.3.0"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.6",
+    "@types/jest": "^29.5.12",
     "jest": "^29.7.0",
-    "nodemon": "^3.0.1",
-    "prettier": "^3.0.3"
+    "nodemon": "^3.1.0",
+    "prettier": "^3.2.5"
   }
 }

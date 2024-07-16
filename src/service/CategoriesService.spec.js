@@ -39,7 +39,7 @@ describe('CategoriesService', () => {
         });
     });
     describe('categoriesGet', () => {
-        it('returns the categories as list (no parent ID, no pagination)', async () => {
+        it('returns the categories as list (no parent ID, no keyword, no pagination)', async () => {
             httpClient.get.mockResolvedValue({ data: data.categoriesGet, status: 200 });
 
             const result = await service.categoriesGet();
@@ -68,12 +68,38 @@ describe('CategoriesService', () => {
         it('returns the categories as list (with pagination)', async () => {
             httpClient.get.mockResolvedValue({ data: data.categoriesGet, status: 200 });
 
-            const result = await service.categoriesGet(undefined, 'EN', 123);
+            const result = await service.categoriesGet(undefined, undefined, 'EN', 123);
 
             expect(httpClient.get.mock.calls[0][0]).toEqual('/category-trees');
             expect(result.categories.length).toEqual(0);
             expect(result.hasNext).toEqual(false);
             expect(result.total).toEqual(data.categoryIdsList.length);
+        });
+        it('returns the categories as list (with keyword and pagination)', async () => {
+            httpClient.get.mockResolvedValue({ data: data.categoriesGet, status: 200 });
+
+            const result = await service.categoriesGet(undefined, 'Cam', 'EN', 1);
+
+            expect(httpClient.get.mock.calls[0][0]).toEqual('/category-trees');
+            expect(result.categories.length).toEqual(3);
+            expect(result.categories[0].label).toEqual("Cameras & Camcorders");
+            expect(result.categories[1].label).toEqual("Digital Cameras");
+            expect(result.categories[2].label).toEqual("Camcorders");
+            expect(result.hasNext).toEqual(false);
+            expect(result.total).toEqual(3);
+        });
+        it('returns the categories as list (with parentId, keyword and pagination)', async () => {
+            const testCategory = data.categoriesGet.data[0].attributes.categoryNodesStorage[0];
+            httpClient.get.mockResolvedValue({ data: data.categoriesGetParentId, status: 200 });
+
+            const result = await service.categoriesGet(testCategory.nodeId, 'Notebooks', 'EN', 1);
+
+            expect(httpClient.get.mock.calls[0][0]).toEqual('/category-nodes/' + testCategory.nodeId);
+
+            expect(result.categories.length).toEqual(1);
+            expect(result.categories[0].label).toEqual("Notebooks");
+            expect(result.hasNext).toEqual(false);
+            expect(result.total).toEqual(1);
         });
     });
     describe('categoryTreeGet', () => {
